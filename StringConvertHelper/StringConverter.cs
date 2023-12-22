@@ -1,96 +1,57 @@
 namespace StringConvertHelper;
 
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 public static class StringConverter
 {
-    public delegate bool TryConverter<T>(string? value, out T result);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryConvert<TResult>(string? value, out TResult result) => Converter<TResult>.TryConverter.TryConvert(value, out result);
 
-    public static class Converter<T>
+    internal static class Converter<T>
     {
-        public static readonly TryConverter<T> TryConverter = ResolveConverter();
+        internal static readonly ITryConverter<T> TryConverter = ResolveConverter();
 
-        private static TryConverter<T> ResolveConverter()
+        private static ITryConverter<T> ResolveConverter()
         {
             var type = typeof(T);
-            if (type == typeof(bool))
-            {
-                return (TryConverter<T>)(object)(TryConverter<bool>)Boolean.TryParse;
-            }
-            if (type == typeof(char))
-            {
-                return (TryConverter<T>)(object)(TryConverter<char>)Char.TryParse;
-            }
-            if (type == typeof(sbyte))
-            {
-                return (TryConverter<T>)(object)(TryConverter<sbyte>)SByte.TryParse;
-            }
-            if (type == typeof(byte))
-            {
-                return (TryConverter<T>)(object)(TryConverter<byte>)Byte.TryParse;
-            }
-            if (type == typeof(short))
-            {
-                return (TryConverter<T>)(object)(TryConverter<short>)Int16.TryParse;
-            }
-            if (type == typeof(ushort))
-            {
-                return (TryConverter<T>)(object)(TryConverter<ushort>)UInt16.TryParse;
-            }
             if (type == typeof(int))
             {
-                return (TryConverter<T>)(object)(TryConverter<int>)Int32.TryParse;
-            }
-            if (type == typeof(uint))
-            {
-                return (TryConverter<T>)(object)(TryConverter<uint>)UInt32.TryParse;
-            }
-            if (type == typeof(long))
-            {
-                return (TryConverter<T>)(object)(TryConverter<long>)Int64.TryParse;
-            }
-            if (type == typeof(ulong))
-            {
-                return (TryConverter<T>)(object)(TryConverter<ulong>)UInt64.TryParse;
-            }
-            if (type == typeof(float))
-            {
-                return (TryConverter<T>)(object)(TryConverter<float>)Single.TryParse;
-            }
-            if (type == typeof(double))
-            {
-                return (TryConverter<T>)(object)(TryConverter<double>)Double.TryParse;
-            }
-            if (type == typeof(decimal))
-            {
-                return (TryConverter<T>)(object)(TryConverter<decimal>)Decimal.TryParse;
-            }
-            if (type == typeof(DateTime))
-            {
-                return (TryConverter<T>)(object)(TryConverter<DateTime>)DateTime.TryParse;
+                return (ITryConverter<T>)(object)new Int32Converter();
             }
 
-            var converter = TypeDescriptor.GetConverter(type);
-            if (converter.CanConvertFrom(typeof(string)))
-            {
-                return TypeConverterConverter<T>.TryConvert;
-            }
+            // TODO
 
-            return AlwaysFailed;
+            return new AlwaysFailedConverter<T>();
         }
+    }
 
-        private static bool AlwaysFailed(string? value, out T result)
+    internal interface ITryConverter<T>
+    {
+        bool TryConvert(string? value, out T result);
+    }
+
+    // TODO
+
+    private sealed class Int32Converter : ITryConverter<int>
+    {
+        public bool TryConvert(string? value, out int result) => Int32.TryParse(value, out result);
+    }
+
+    private sealed class AlwaysFailedConverter<T> : ITryConverter<T>
+    {
+        public bool TryConvert(string? value, out T result)
         {
             result = default!;
             return false;
         }
     }
 
-    private static class TypeConverterConverter<T>
+    public sealed class TypeConverterConverter<T> : ITryConverter<T>
     {
         private static readonly TypeConverter Converter = TypeDescriptor.GetConverter(typeof(T));
 
-        public static bool TryConvert(string? value, out T result)
+        public bool TryConvert(string? value, out T result)
         {
             if (value is null)
             {
