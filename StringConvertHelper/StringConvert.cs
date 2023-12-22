@@ -3,7 +3,7 @@ namespace StringConvertHelper;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-public static class StringConverter
+public static class StringConvert
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryConvert<TResult>(string? value, out TResult result) => Converter<TResult>.TryConverter.TryConvert(value, out result);
@@ -15,12 +15,18 @@ public static class StringConverter
         private static ITryConverter<T> ResolveConverter()
         {
             var type = typeof(T);
-            if (type == typeof(int))
+
+            if (type.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IParsable<>)))
             {
-                return (ITryConverter<T>)(object)new Int32Converter();
+                var converterType = typeof(ParsableConverter<>).MakeGenericType(type);
+                return (ITryConverter<T>)Activator.CreateInstance(converterType)!;
             }
 
-            // TODO
+            var converter = TypeDescriptor.GetConverter(type);
+            if (converter.CanConvertFrom(typeof(string)))
+            {
+                return new TypeConverterConverter<T>();
+            }
 
             return new AlwaysFailedConverter<T>();
         }
@@ -31,12 +37,13 @@ public static class StringConverter
         bool TryConvert(string? value, out T result);
     }
 
-    // TODO
-
-    private sealed class Int32Converter : ITryConverter<int>
+#pragma warning disable CA1812
+    internal sealed class ParsableConverter<T> : ITryConverter<T>
+        where T : IParsable<T>
     {
-        public bool TryConvert(string? value, out int result) => Int32.TryParse(value, out result);
+        public bool TryConvert(string? value, out T result) => T.TryParse(value, null, out result!);
     }
+#pragma warning restore CA1812
 
     private sealed class AlwaysFailedConverter<T> : ITryConverter<T>
     {
@@ -47,7 +54,7 @@ public static class StringConverter
         }
     }
 
-    public sealed class TypeConverterConverter<T> : ITryConverter<T>
+    private sealed class TypeConverterConverter<T> : ITryConverter<T>
     {
         private static readonly TypeConverter Converter = TypeDescriptor.GetConverter(typeof(T));
 
