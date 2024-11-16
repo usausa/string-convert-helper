@@ -16,7 +16,7 @@ public static class StringConvert
         {
             var type = typeof(T);
 
-            if (type.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IParsable<>)))
+            if (type.GetInterfaces().Any(static x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IParsable<>)))
             {
                 var converterType = typeof(ParsableConverter<>).MakeGenericType(type);
                 return (ITryConverter<T>)Activator.CreateInstance(converterType)!;
