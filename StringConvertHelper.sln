@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		README.md = README.md
 		StringConvertHelper.sln.DotSettings = StringConvertHelper.sln.DotSettings
+		test.runsettings = test.runsettings
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StringConvertHelper.Tests", "StringConvertHelper.Tests\StringConvertHelper.Tests.csproj", "{B205CC6B-BE0B-4047-91B0-71B8D553D0DB}"
