@@ -24,7 +24,7 @@ public sealed class StringConvertTest
     }
 
     [TypeConverter(typeof(CustomTypeConverter))]
-    public sealed class CustomType
+    private sealed class CustomType
     {
         public int Value { get; }
 
