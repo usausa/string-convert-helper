@@ -15,6 +15,15 @@ public sealed class StringConvertTest
     }
 
     [Fact]
+    public void TestByNullableParsable()
+    {
+        var result = StringConvert.TryConvert<int?>("12345", out var value);
+
+        Assert.True(result);
+        Assert.Equal(12345, value);
+    }
+
+    [Fact]
     public void TestByTypeConverter()
     {
         var result = StringConvert.TryConvert<CustomType>("12345", out var value);
